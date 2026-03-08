@@ -1,0 +1,25 @@
+{
+  "defaults": {
+    "characterLimit": 280,
+    "style": "engaging",
+    "includeClawHubLink": true
+  },
+  "hashtags": {
+    "always": ["#OpenClaw"],
+    "optional": ["#DevTools", "#AI", "#Automation", "#BuildInPublic"]
+  },
+  "mentions": {
+    "default": []
+  },
+  "agentSwarm": {
+    "model": "openrouter/moonshotai/kimi-k2.5",
+    "tier": "CREATIVE",
+    "timeoutSeconds": 60
+  },
+  "clawHub": {
+    "baseUrl": "https://clawhub.dev/skills/"
+  },
+  "output": {
+    "jsonIndent": 2
+  }
+}

@@ -1,18 +1,22 @@
 {
   "schema": "openclaw.skill.v1",
   "name": "tweet-crafter",
-  "version": "0.2.0",
+  "version": "1.0.0",
   "displayName": "Tweet Crafter",
-  "description": "Drafts engaging tweets in copy-paste friendly code blocks and generates companion blog posts for various OpenClaw projects and announcements. Integrates with Agent Swarm and enforces ClawHub link best practices.",
+  "description": "Drafts engaging tweets in copy-paste friendly code blocks and generates companion blog posts for OpenClaw projects. Integrates with Agent Swarm for AI-powered content generation and enforces ClawHub link best practices.",
   "author": "RuneweaverStudios",
   "tags": [
     "twitter",
     "content-creation",
     "social-media",
     "generation",
-    "cli"
+    "cli",
+    "marketing",
+    "blog",
+    "copywriting"
   ],
   "platform": "openclaw",
+  "main": "scripts/tweet_crafter.py",
   "icon": "\ud83d\udc26",
   "color": "#1DA1F2"
 }

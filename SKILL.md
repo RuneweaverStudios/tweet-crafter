@@ -2,7 +2,7 @@
 name: tweet-crafter
 displayName: Tweet Crafter for OpenClaw
 description: Drafts engaging tweets in copy-paste friendly code blocks and generates companion blog posts for various OpenClaw projects and announcements. Integrates with Agent Swarm and enforces ClawHub link best practices.
-version: 0.1.0
+version: 0.2.0
 ---
 
 # Tweet Crafter Skill

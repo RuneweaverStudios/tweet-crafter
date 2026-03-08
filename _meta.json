@@ -5,7 +5,13 @@
   "displayName": "Tweet Crafter",
   "description": "Drafts engaging tweets in copy-paste friendly code blocks and generates companion blog posts for various OpenClaw projects and announcements. Integrates with Agent Swarm and enforces ClawHub link best practices.",
   "author": "RuneweaverStudios",
-  "tags": [],
+  "tags": [
+    "twitter",
+    "content-creation",
+    "social-media",
+    "generation",
+    "cli"
+  ],
   "platform": "openclaw",
   "icon": "\ud83d\udc26",
   "color": "#1DA1F2"

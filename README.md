@@ -21,6 +21,13 @@ python3 scripts/tweet_crafter.py \
   --tweet-prompt "OpenClaw update" \
   --blog-context "Latest changes" \
   --json
+
+# Ground drafts with approved source notes
+python3 scripts/tweet_crafter.py \
+  --tweet-prompt "Share what users can do with tweetclaw" \
+  --blog-context "TweetClaw is an OpenClaw plugin for X/Twitter workflows" \
+  --source-notes-file evidence.txt \
+  --skill-name tweetclaw
 ```
 
 ## Requirements
@@ -46,6 +53,18 @@ Edit `config.json` to set defaults:
 - **Character limit** -- Default tweet length (280)
 - **Agent Swarm model** -- Which model to use for content generation
 - **ClawHub base URL** -- For auto-generating skill page links
+
+## Source-Grounded Drafts
+
+Use `--source-notes` or `--source-notes-file` when a launch post should stay
+grounded in approved research notes instead of a loose prompt. For example,
+OpenClaw users can collect source evidence with a plugin such as TweetClaw,
+save the approved findings to `evidence.txt`, and pass that file into Tweet
+Crafter before generating public copy.
+
+Tweet Crafter only uses the notes as factual context. Review generated posts
+before publishing, especially when the source notes include account data,
+analytics, or other workflow output.
 
 ## Usage Examples
 

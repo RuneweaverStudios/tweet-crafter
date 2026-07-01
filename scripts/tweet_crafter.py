@@ -68,7 +68,12 @@ def _load_source_notes(inline_notes: Optional[str], source_file: Optional[str]) 
     return joined or None
 
 
-def _call_agent_swarm(prompt: str, model: str = None, tier: str = None) -> str:
+def _call_agent_swarm(
+    prompt: str,
+    model: str = None,
+    tier: str = None,
+    local_prompt: Optional[str] = None,
+) -> str:
     """Call Agent Swarm's router to generate content.
 
     Tries three methods in order:
@@ -118,7 +123,7 @@ def _call_agent_swarm(prompt: str, model: str = None, tier: str = None) -> str:
 
     # Method 3: Local fallback
     logging.info("Using local template-based generation (Agent Swarm not available).")
-    return _generate_locally(prompt)
+    return _generate_locally(local_prompt or prompt)
 
 
 def _generate_locally(prompt: str) -> str:
@@ -224,20 +229,29 @@ def draft_content(
         hashtags = cfg_hashtags
 
     # Build tweet prompt
-    full_tweet_prompt = f'Craft a tweet (max {character_limit} chars) based on: """{tweet_prompt}""" '
+    base_tweet_prompt = f'Craft a tweet (max {character_limit} chars) based on: """{tweet_prompt}""" '
+    full_tweet_prompt = base_tweet_prompt
     if skill_name:
         full_tweet_prompt += f"about the skill {skill_name} "
     if clawhub_link:
         full_tweet_prompt += f"Include the ClawHub link: {clawhub_link}. "
+    local_tweet_prompt = full_tweet_prompt
     if source_notes:
         full_tweet_prompt += f'Use these source notes for factual grounding: """{source_notes}""" '
     if mentions:
         full_tweet_prompt += f"Mention: {' '.join(mentions)}. "
+        local_tweet_prompt += f"Mention: {' '.join(mentions)}. "
     if hashtags:
         full_tweet_prompt += f"Include hashtags: {' '.join(hashtags)}. "
+        local_tweet_prompt += f"Include hashtags: {' '.join(hashtags)}. "
     full_tweet_prompt += "Ensure it's engaging and concise."
+    local_tweet_prompt += "Ensure it's engaging and concise."
 
-    drafted_tweet = _call_agent_swarm(full_tweet_prompt, tier="CREATIVE")
+    drafted_tweet = _call_agent_swarm(
+        full_tweet_prompt,
+        tier="CREATIVE",
+        local_prompt=local_tweet_prompt,
+    )
 
     # Enforce character limit
     if len(drafted_tweet) > character_limit:

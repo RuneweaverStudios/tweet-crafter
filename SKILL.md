@@ -20,6 +20,7 @@ Automates and standardizes the creation of marketing and announcement content fo
 - **ClawHub Link Enforcement** -- Automatically generates and includes ClawHub skill page links when a skill name is provided.
 - **Companion Blog Posts** -- Creates a short blog post to expand on the tweet's announcement.
 - **Customizable Content** -- Accepts mentions, hashtags, and context as structured JSON input with validation.
+- **Source-Grounded Drafts** -- Accepts inline or file-based source notes so generated copy can stay tied to approved research evidence.
 - **JSON Output** -- Supports `--json` flag for machine-readable output, suitable for pipelines and automation.
 - **Config-Driven Defaults** -- Default hashtags, character limits, and Agent Swarm settings are configurable via `config.json`.
 
@@ -50,6 +51,13 @@ python3 scripts/tweet_crafter.py \
   --blog-context "Latest changes" \
   --json
 
+# Use approved source notes from a research workflow
+python3 scripts/tweet_crafter.py \
+  --tweet-prompt "Share the latest TweetClaw workflow" \
+  --blog-context "TweetClaw helps OpenClaw users work with X/Twitter from approved context" \
+  --source-notes-file evidence.txt \
+  --skill-name tweetclaw
+
 # Custom character limit
 python3 scripts/tweet_crafter.py \
   --tweet-prompt "Short tweet" \
@@ -66,6 +74,8 @@ python3 scripts/tweet_crafter.py \
 | `--skill-name` | No | None | OpenClaw skill name (auto-generates ClawHub link) |
 | `--github-repo` | No | None | GitHub repository URL to reference |
 | `--clawhub-link` | No | None | Explicit ClawHub link (overrides auto-generated) |
+| `--source-notes` | No | None | Inline source evidence for factual grounding |
+| `--source-notes-file` | No | None | Local file containing source evidence for factual grounding |
 | `--mentions` | No | `[]` | JSON array of @mentions |
 | `--hashtags` | No | `[]` | JSON array of #hashtags |
 | `--character-limit` | No | 280 | Tweet character limit |
@@ -137,6 +147,7 @@ Tweet Crafter uses a three-tier content generation strategy:
 ## Input Validation
 
 - `--mentions` and `--hashtags` must be valid JSON arrays of strings. Invalid input produces a clear error message.
+- `--source-notes-file` must point to a readable local text file.
 - Tweets exceeding the character limit are automatically truncated with `...`.
 - Empty prompts are rejected by argparse's `required=True` constraint.
 

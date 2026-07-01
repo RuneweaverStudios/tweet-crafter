@@ -56,7 +56,24 @@ def _validate_json_list(raw: str, label: str) -> List[str]:
     return parsed
 
 
-def _call_agent_swarm(prompt: str, model: str = None, tier: str = None) -> str:
+def _load_source_notes(inline_notes: Optional[str], source_file: Optional[str]) -> Optional[str]:
+    """Load optional source notes from inline text and/or a local file."""
+    notes: List[str] = []
+    if inline_notes:
+        notes.append(inline_notes.strip())
+    if source_file:
+        source_path = Path(source_file).expanduser()
+        notes.append(source_path.read_text(encoding="utf-8").strip())
+    joined = "\n\n".join(note for note in notes if note)
+    return joined or None
+
+
+def _call_agent_swarm(
+    prompt: str,
+    model: str = None,
+    tier: str = None,
+    local_prompt: Optional[str] = None,
+) -> str:
     """Call Agent Swarm's router to generate content.
 
     Tries three methods in order:
@@ -106,7 +123,7 @@ def _call_agent_swarm(prompt: str, model: str = None, tier: str = None) -> str:
 
     # Method 3: Local fallback
     logging.info("Using local template-based generation (Agent Swarm not available).")
-    return _generate_locally(prompt)
+    return _generate_locally(local_prompt or prompt)
 
 
 def _generate_locally(prompt: str) -> str:
@@ -173,6 +190,7 @@ def draft_content(
     skill_name: Optional[str] = None,
     github_repo: Optional[str] = None,
     clawhub_link: Optional[str] = None,
+    source_notes: Optional[str] = None,
     mentions: Optional[List[str]] = None,
     hashtags: Optional[List[str]] = None,
     character_limit: int = 280,
@@ -185,6 +203,7 @@ def draft_content(
         skill_name: OpenClaw skill name (auto-generates ClawHub link if not provided).
         github_repo: GitHub repository URL to include.
         clawhub_link: Explicit ClawHub link (overrides auto-generated one).
+        source_notes: Optional source evidence or approved research notes to ground drafts.
         mentions: List of @mentions to include.
         hashtags: List of #hashtags to include.
         character_limit: Maximum tweet character count (default: 280).
@@ -210,18 +229,29 @@ def draft_content(
         hashtags = cfg_hashtags
 
     # Build tweet prompt
-    full_tweet_prompt = f'Craft a tweet (max {character_limit} chars) based on: """{tweet_prompt}""" '
+    base_tweet_prompt = f'Craft a tweet (max {character_limit} chars) based on: """{tweet_prompt}""" '
+    full_tweet_prompt = base_tweet_prompt
     if skill_name:
         full_tweet_prompt += f"about the skill {skill_name} "
     if clawhub_link:
         full_tweet_prompt += f"Include the ClawHub link: {clawhub_link}. "
+    local_tweet_prompt = full_tweet_prompt
+    if source_notes:
+        full_tweet_prompt += f'Use these source notes for factual grounding: """{source_notes}""" '
     if mentions:
         full_tweet_prompt += f"Mention: {' '.join(mentions)}. "
+        local_tweet_prompt += f"Mention: {' '.join(mentions)}. "
     if hashtags:
         full_tweet_prompt += f"Include hashtags: {' '.join(hashtags)}. "
+        local_tweet_prompt += f"Include hashtags: {' '.join(hashtags)}. "
     full_tweet_prompt += "Ensure it's engaging and concise."
+    local_tweet_prompt += "Ensure it's engaging and concise."
 
-    drafted_tweet = _call_agent_swarm(full_tweet_prompt, tier="CREATIVE")
+    drafted_tweet = _call_agent_swarm(
+        full_tweet_prompt,
+        tier="CREATIVE",
+        local_prompt=local_tweet_prompt,
+    )
 
     # Enforce character limit
     if len(drafted_tweet) > character_limit:
@@ -235,6 +265,8 @@ def draft_content(
         full_blog_prompt += f"Mention the GitHub repository: {github_repo}. "
     if clawhub_link:
         full_blog_prompt += f"Also link the ClawHub page: {clawhub_link}. "
+    if source_notes:
+        full_blog_prompt += f'Use these source notes for factual grounding: """{source_notes}""" '
     full_blog_prompt += "Make it human, witty, intelligent, not overly technical."
 
     drafted_blog = _call_agent_swarm(full_blog_prompt, tier="CREATIVE")
@@ -253,6 +285,8 @@ def main():
     parser.add_argument("--skill-name", "--skill_name", type=str, default=None, help="OpenClaw skill name.")
     parser.add_argument("--github-repo", "--github_repo", type=str, default=None, help="GitHub repository URL.")
     parser.add_argument("--clawhub-link", "--clawhub_link", type=str, default=None, help="ClawHub link.")
+    parser.add_argument("--source-notes", "--source_notes", type=str, default=None, help="Inline source notes for factual grounding.")
+    parser.add_argument("--source-notes-file", "--source_notes_file", type=str, default=None, help="Path to source notes for factual grounding.")
     parser.add_argument(
         "--mentions", type=str, default="[]",
         help='JSON array of @mentions (e.g., \'["@openclaw", "@user"]\'). Must be valid JSON.'
@@ -269,8 +303,12 @@ def main():
     try:
         mentions_list = _validate_json_list(args.mentions, "mentions")
         hashtags_list = _validate_json_list(args.hashtags, "hashtags")
+        source_notes = _load_source_notes(args.source_notes, args.source_notes_file)
     except ValueError as exc:
         logging.error(str(exc))
+        sys.exit(1)
+    except OSError as exc:
+        logging.error("Could not read source notes: %s", exc)
         sys.exit(1)
 
     try:
@@ -280,6 +318,7 @@ def main():
             skill_name=args.skill_name,
             github_repo=args.github_repo,
             clawhub_link=args.clawhub_link,
+            source_notes=source_notes,
             mentions=mentions_list,
             hashtags=hashtags_list,
             character_limit=args.character_limit,
